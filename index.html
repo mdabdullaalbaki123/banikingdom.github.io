@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>BANI KINGDOM ♔</title>
+<style>
+  :root[data-theme="dark"] {
+    --bg:#14121a; --panel:#1c1926; --panel-alt:#241f30; --border:#332c40;
+    --amber:#E8A33D; --amber-dim:#8a6a34; --cyan:#5FD4C0; --text:#F3EDE0;
+    --muted:#8B8496; --danger:#E1604F; --overlay:rgba(16,14,20,0.62);
+  }
+  :root[data-theme="light"] {
+    --bg:#F6F2EA; --panel:#FFFFFF; --panel-alt:#FBF8F2; --border:#E3DBCB;
+    --amber:#C9761F; --amber-dim:#B8935B; --cyan:#158C77; --text:#2B2620;
+    --muted:#7A7264; --danger:#C0392B; --overlay:rgba(246,242,234,0.72);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height:100vh; padding-bottom:60px; transition: background .2s;
+  }
+  .mono { font-family: ui-monospace, "Courier New", monospace; }
+  .wrap { max-width: 900px; margin:0 auto; padding: 24px 18px 0; }
+  .header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .brand h1 { font-family: Georgia, serif; font-size:1.5rem; margin:0; display:flex; align-items:center; gap:6px; }
+  .edit-name-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:2px 4px; }
+  .clock { margin-top:6px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .clock .time { color:var(--amber); font-weight:700; font-size:1.05rem; letter-spacing:0.05em; }
+  .clock .date { color:var(--muted); font-size:0.75rem; }
+  .controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .icon-btn {
+    width:44px; height:44px; border-radius:10px; border:1px solid var(--border); background:var(--panel);
+    color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem;
+  }
+  .icon-btn.wide { width:auto; padding:0 12px; gap:6px; font-size:0.8rem; font-weight:700; }
+  .icon-btn.primary { background:var(--amber); border-color:var(--amber); color:var(--bg); }
+  .avatar-btn { width:44px; height:44px; border-radius:10px; border:1px solid var(--border); overflow:hidden; cursor:pointer; padding:0; background:var(--panel); }
+  .avatar-btn img { width:100%; height:100%; object-fit:cover; }
+  .save-error { background:#3a1f1f; border:1px solid var(--danger); color:#f0b8b0; border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:0.9rem; }
+  .search-bar { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:8px; display:flex; align-items:center; gap:8px; margin-bottom:26px; }
+  .search-bar .sicon { color:var(--amber); padding-left:8px; font-size:1.1rem; }
+  .search-bar input { flex:1; border:none; outline:none; background:transparent; color:var(--text); font-size:1rem; padding:8px 0; }
+  .search-bar button { background:var(--amber); color:var(--bg); border:none; border-radius:12px; padding:10px 16px; font-weight:700; font-size:0.85rem; letter-spacing:0.03em; cursor:pointer; }
+  .tabs { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .tab { border-radius:999px; padding:7px 14px; font-size:0.75rem; font-weight:700; border:1px solid var(--border); background:var(--panel); color:var(--muted); cursor:pointer; }
+  .tab.active { background:var(--amber); border-color:var(--amber); color:var(--bg); }
+  .add-channel { margin-left:auto; border:1px dashed var(--amber); color:var(--amber); background:transparent; border-radius:999px; padding:7px 14px; font-size:0.75rem; font-weight:700; cursor:pointer; }
+  .empty { border:1px dashed var(--border); color:var(--muted); border-radius:16px; padding:40px 16px; text-align:center; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit; }
+  .card-top { display:flex; align-items:center; justify-content:space-between; }
+  .ch { color:var(--amber-dim); font-size:0.68rem; font-weight:700; }
+  .card-top-right { display:flex; align-items:center; gap:6px; }
+  .bookmark-btn { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:2px; }
+  .card-top-right button { background:none; border:none; cursor:pointer; padding:2px; font-size:0.85rem; }
+  .card-title { display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem; }
+  .card-title img { width:18px; height:18px; border-radius:4px; }
+  .card-cat { color:var(--cyan); font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; }
+  .section-title { font-family:Georgia, serif; font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:8px; margin: 34px 0 14px; }
+  .media-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .media-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:14px; }
+  .media-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .media-thumb { background:var(--bg); aspect-ratio: 16/10; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .media-thumb img, .media-thumb iframe { width:100%; height:100%; object-fit:cover; border:0; }
+  .media-meta { padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .media-meta .mtitle { font-size:0.85rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .media-meta .mactions { display:flex; gap:8px; flex-shrink:0; }
+  .media-meta a, .media-meta button { background:none; border:none; cursor:pointer; text-decoration:none; font-size:1rem; }
+  .footer-tag { text-align:center; margin-top:56px; color:var(--border); font-size:0.68rem; }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:16px; z-index:20; }
+  .modal { background:var(--panel-alt); border:1px solid var(--border); color:var(--text); border-radius:18px; padding:20px; width:100%; max-width:380px; max-height:85vh; overflow-y:auto; }
+  .modal h2 { font-size:1rem; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; }
+  .modal h2 button { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; }
+  .modal label { color:var(--muted); font-size:0.75rem; display:block; margin-bottom:4px; }
+  .modal input[type=text], .modal input[type=password], .modal select {
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px;
+    padding:9px 12px; font-size:0.9rem; margin-bottom:12px; outline:none;
+  }
+  .modal input[type=color] { width:100%; height:44px; border-radius:10px; border:1px solid var(--border); margin-bottom:16px; }
+  .modal .hint { color:var(--muted); font-size:0.7rem; margin:-6px 0 12px; }
+  .modal .err { color:var(--danger); font-size:0.8rem; margin-bottom:10px; }
+  .modal .submit { width:100%; background:var(--amber); color:var(--bg); border:none; border-radius:10px; padding:11px; font-weight:700; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .google-btn { width:100%; background:#fff; color:#3c4043; border:1px solid var(--border); border-radius:10px; padding:11px; font-weight:600; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; }
+  .divider { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:0.72rem; margin:14px 0; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:var(--border); }
+  .seg { display:flex; gap:8px; margin-bottom:14px; }
+  .seg button { flex:1; border-radius:10px; padding:9px; font-size:0.85rem; font-weight:700; border:1px solid var(--border); background:var(--panel); color:var(--muted); cursor:pointer; }
+  .seg button.active { background:var(--amber); border-color:var(--amber); color:var(--bg); }
+  .drawer-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:25; }
+  .drawer { position:fixed; top:0; right:0; height:100%; width:300px; max-width:85vw; background:var(--panel-alt);
+    border-left:1px solid var(--border); padding:18px; overflow-y:auto; color:var(--text); }
+  .drawer h2 { font-size:1rem; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; }
+  .drawer h2 button { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; }
+  .drawer-tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .drawer-tabs button { flex:1; border-radius:10px; padding:8px 4px; font-size:0.72rem; font-weight:700; border:1px solid var(--border); background:var(--panel); color:var(--muted); cursor:pointer; }
+  .drawer-tabs button.active { background:var(--amber); border-color:var(--amber); color:var(--bg); }
+  .drawer-item { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--border); font-size:0.85rem; }
+  .drawer-item a { color:inherit; text-decoration:none; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .drawer-item button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; flex-shrink:0; }
+  .drawer-empty { color:var(--muted); font-size:0.85rem; text-align:center; padding:24px 0; }
+  .drawer-clear { color:var(--danger); background:none; border:none; font-size:0.72rem; cursor:pointer; margin-bottom:8px; }
+  .drawer-guest-note { color:var(--muted); font-size:0.7rem; text-align:center; margin-top:16px; padding-top:12px; border-top:1px dashed var(--border); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="drawer-root"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Firebase ---------- */
+  var firebaseConfig = {
+    apiKey: "AIzaSyBRgMRHXe6oaA8e-qTXeXRYZBRTmOj9CNU",
+    authDomain: "bani-kingdom.firebaseapp.com",
+    projectId: "bani-kingdom",
+    storageBucket: "bani-kingdom.firebasestorage.app",
+    messagingSenderId: "145157406787",
+    appId: "1:145157406787:web:9900d0d6815772d423d4f6"
+  };
+  if (typeof firebase === "undefined") {
+    document.body.innerHTML =
+      '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#F3EDE0;background:#14121a;font-family:sans-serif">' +
+        '<div><p style="font-size:1.05rem;font-weight:700;margin-bottom:8px">⚠️ লোড হয়নি</p>' +
+        '<p style="font-size:0.9rem;opacity:0.8">ইন্টারনেট সংযোগ চেক করুন এবং পেজটা রিফ্রেশ করুন। এই সাইটটা চালু হতে ইন্টারনেট প্রয়োজন।</p></div>' +
+      '</div>';
+    return;
+  }
+  var fbApp = firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+  var siteRef = db.collection("site").doc("main");
+  var userUnsub = null;
+
+  /* ---------- pure-JS SHA-256 (used only for the password path; no crypto.subtle dependency) ---------- */
+  function sha256(ascii) {
+    function rightRotate(v, n) { return (v >>> n) | (v << (32 - n)); }
+    var maxWord = Math.pow(2, 32);
+    var words = [], asciiBitLength = ascii.length * 8;
+    var hash = sha256.h = sha256.h || [];
+    var k = sha256.k = sha256.k || [];
+    var primeCounter = k.length;
+    var isComposite = {};
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (var i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+        hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+    ascii += "\x80";
+    while ((ascii.length % 64) - 56) ascii += "\x00";
+    for (var j = 0; j < ascii.length; j++) {
+      var b = ascii.charCodeAt(j);
+      if (b > 255) { throw new Error("input must be ascii-safe"); }
+      words[j >> 2] |= b << (((3 - j) % 4) * 8);
+    }
+    words[words.length] = ((asciiBitLength / maxWord) | 0);
+    words[words.length] = (asciiBitLength);
+    for (var chunkIndex = 0; chunkIndex < words.length; chunkIndex += 16) {
+      var w = words.slice(chunkIndex, chunkIndex + 16);
+      var oldHash = hash.slice(0);
+      hash = hash.slice(0);
+      for (var i2 = 0; i2 < 64; i2++) {
+        if (i2 >= 16) {
+          var w15 = w[i2 - 15], w2 = w[i2 - 2];
+          var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+          var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+          w[i2] = (w[i2 - 16] + s0 + w[i2 - 7] + s1) | 0;
+        }
+        var S1 = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+        var ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+        var temp1 = (hash[7] + S1 + ch + k[i2] + w[i2]) | 0;
+        var S0 = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+        var maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+        var temp2 = (S0 + maj) | 0;
+        hash = [(temp1 + temp2) | 0].concat(hash.slice(0, 7));
+        hash[4] = (hash[4] + temp1) | 0;
+      }
+      for (var l = 0; l < 8; l++) hash[l] = (hash[l] + oldHash[l]) | 0;
+    }
+    var result = "";
+    for (var m = 0; m < 8; m++) {
+      for (var n = 3; n >= 0; n--) {
+        var byte = (hash[m] >> (n * 8)) & 255;
+        result += ("00" + byte.toString(16)).slice(-2);
+      }
+    }
+    sha256.h = null; sha256.k = null;
+    return result;
+  }
+  function hashPassword(pw) { return sha256(unescape(encodeURIComponent(pw))); }
+
+  /* ---------- i18n ---------- */
+  var DEFAULT_CATEGORY_KEYS = ["movie", "tv", "music", "other"];
+  var CATEGORY_LABELS = {
+    bn: { movie: "মুভি", tv: "টিভি", music: "গান", other: "অন্যান্য" },
+    en: { movie: "Movie", tv: "TV", music: "Music", other: "Other" }
+  };
+  function catLabel(key, lang) { return (CATEGORY_LABELS[lang] && CATEGORY_LABELS[lang][key]) || key; }
+
+  var STR = {
+    bn: {
+      searchPlaceholder: "গুগলে সার্চ করুন…", searchBtn: "সার্চ", all: "সব",
+      addChannel: "নতুন চ্যানেল যোগ করুন", noLinks: "এখনো কোনো লিংক যোগ করা হয়নি।",
+      loginToAdd: "অ্যাডমিন লগইন করে প্রথম লিংক যোগ করুন।", adminModeOn: "অ্যাডমিন মোড চালু",
+      openToAll: "সবার জন্য উন্মুক্ত", changePassword: "পাসওয়ার্ড পরিবর্তন করুন", logout: "লগআউট",
+      admin: "অ্যাডমিন", saveError: "সংযোগে সমস্যা হচ্ছে। ইন্টারনেট চেক করুন।", name: "নাম", link: "লিংক (URL)",
+      category: "ক্যাটাগরি", orNewCategory: "অথবা নতুন ক্যাটাগরি লিখুন", save: "সংরক্ষণ করুন",
+      editLink: "লিংক এডিট করুন", addLink: "নতুন লিংক যোগ করুন", adminLogin: "অ্যাডমিন লগইন",
+      adminSetup: "অ্যাডমিন পাসওয়ার্ড সেট করুন",
+      setupHint: "এই প্রথম সেটআপ — এই পাসওয়ার্ড দিয়েই পরে অ্যাডমিন প্যানেলে ঢুকতে হবে।",
+      password: "পাসওয়ার্ড", confirmPassword: "পাসওয়ার্ড আবার লিখুন", setupAndLogin: "সেট করুন ও লগইন করুন",
+      login: "লগইন", wrongPassword: "পাসওয়ার্ড ভুল হয়েছে", pwTooShort: "অন্তত ৪ অক্ষরের পাসওয়ার্ড দিন",
+      pwMismatch: "পাসওয়ার্ড মিলছে না", currentPassword: "বর্তমান পাসওয়ার্ড", newPassword: "নতুন পাসওয়ার্ড",
+      confirmNewPassword: "নতুন পাসওয়ার্ড আবার লিখুন", wrongCurrentPw: "বর্তমান পাসওয়ার্ড ভুল",
+      changePasswordTitle: "পাসওয়ার্ড পরিবর্তন করুন", bgSettings: "ব্যাকগ্রাউন্ড সেটিংস",
+      bgColorOption: "সলিড রং", bgImageOption: "ছবি (URL)", bgColorLabel: "রং বেছে নিন",
+      bgImageLabel: "ছবির URL", apply: "প্রয়োগ করুন", siteNameSettings: "সাইটের নাম পরিবর্তন করুন",
+      siteNameLabel: "নাম", media: "মিডিয়া", addMedia: "মিডিয়া যোগ করুন",
+      mediaUrl: "লিংক (Google Drive বা সরাসরি URL)", mediaTitle: "শিরোনাম", mediaTypeLabel: "ধরন",
+      image: "ছবি", video: "ভিডিও", noMedia: "এখনো কোনো মিডিয়া যোগ করা হয়নি।",
+      driveHint: "Google Drive লিংক হলে শেয়ারিং \"Anyone with the link\" করে দিন।",
+      namePlaceholder: "যেমন: Netflix", channelPrefix: "চ্যানেল",
+      history: "হিস্টরি", watchLater: "পরে দেখুন", downloads: "ডাউনলোড",
+      noHistory: "এখনো কোনো হিস্টরি নেই।", noWatchLater: "\"পরে দেখুন\" এ কিছু যোগ করা হয়নি।",
+      noDownloads: "ডাউনলোডযোগ্য কোনো মিডিয়া নেই।", clearHistory: "সব মুছে ফেলুন",
+      signInGoogle: "Google দিয়ে সাইন-ইন করুন", signOut: "সাইন আউট",
+      continueWithGoogle: "Google দিয়ে চালিয়ে যান", orDivider: "অথবা",
+      guestNote: "সাইন-ইন না করলে এই তালিকা শুধু এই ফোনেই থাকবে। সাইন-ইন করলে যেকোনো ডিভাইস থেকে দেখা যাবে।",
+      notAdminAccount: "এই Google অ্যাকাউন্ট অ্যাডমিন হিসেবে অনুমোদিত না।",
+      loading: "লোড হচ্ছে…"
+    },
+    en: {
+      searchPlaceholder: "Search on Google…", searchBtn: "SEARCH", all: "All",
+      addChannel: "Add new channel", noLinks: "No links added yet.",
+      loginToAdd: "Log in as admin to add the first link.", adminModeOn: "Admin mode on",
+      openToAll: "Open to everyone", changePassword: "Change password", logout: "Log out",
+      admin: "Admin", saveError: "Connection issue. Check your internet.", name: "Name", link: "Link (URL)",
+      category: "Category", orNewCategory: "Or type a new category", save: "Save",
+      editLink: "Edit link", addLink: "Add new link", adminLogin: "Admin login",
+      adminSetup: "Set admin password",
+      setupHint: "First-time setup — this password is what you'll use to log in later.",
+      password: "Password", confirmPassword: "Confirm password", setupAndLogin: "Set & log in",
+      login: "Log in", wrongPassword: "Wrong password", pwTooShort: "Password must be at least 4 characters",
+      pwMismatch: "Passwords don't match", currentPassword: "Current password", newPassword: "New password",
+      confirmNewPassword: "Confirm new password", wrongCurrentPw: "Current password is wrong",
+      changePasswordTitle: "Change password", bgSettings: "Background settings",
+      bgColorOption: "Solid color", bgImageOption: "Image (URL)", bgColorLabel: "Pick a color",
+      bgImageLabel: "Image URL", apply: "Apply", siteNameSettings: "Edit site name",
+      siteNameLabel: "Name", media: "Media", addMedia: "Add media",
+      mediaUrl: "Link (Google Drive or direct URL)", mediaTitle: "Title", mediaTypeLabel: "Type",
+      image: "Image", video: "Video", noMedia: "No media added yet.",
+      driveHint: "For Google Drive links, set sharing to \"Anyone with the link\".",
+      namePlaceholder: "e.g. Netflix", channelPrefix: "CH",
+      history: "History", watchLater: "Watch Later", downloads: "Downloads",
+      noHistory: "No history yet.", noWatchLater: "Nothing in Watch Later yet.",
+      noDownloads: "No downloadable media yet.", clearHistory: "Clear all",
+      signInGoogle: "Sign in with Google", signOut: "Sign out",
+      continueWithGoogle: "Continue with Google", orDivider: "or",
+      guestNote: "Not signed in — this list stays on this phone only. Sign in to access it from any device.",
+      notAdminAccount: "This Google account isn't authorized as admin.",
+      loading: "Loading…"
+    }
+  };
+
+  /* ---------- local (guest) prefs & activity ---------- */
+  var PREFS_KEY = "bani-kingdom-prefs";
+  var ACTIVITY_KEY = "bani-kingdom-activity";
+  function loadPrefs() { try { var r = localStorage.getItem(PREFS_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+  function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify({ lang: state.lang, theme: state.theme })); } catch (e) {} }
+  function loadLocalActivity() { try { var r = localStorage.getItem(ACTIVITY_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+  function saveLocalActivity() { try { localStorage.setItem(ACTIVITY_KEY, JSON.stringify({ history: state.history, watchLater: state.watchLater })); } catch (e) {} }
+
+  /* ---------- state ---------- */
+  var savedPrefs = loadPrefs();
+  var savedLocalActivity = loadLocalActivity();
+  var state = {
+    links: [], categories: DEFAULT_CATEGORY_KEYS.slice(), adminHash: null, adminEmail: null,
+    background: null, media: [], siteName: "BANI KINGDOM ♔", siteLoaded: false,
+    lang: (savedPrefs && savedPrefs.lang) || "bn",
+    theme: (savedPrefs && savedPrefs.theme) || "dark",
+    history: (savedLocalActivity && savedLocalActivity.history) || [],
+    watchLater: (savedLocalActivity && savedLocalActivity.watchLater) || [],
+    currentUser: null,
+    isAdmin: false,
+    activeCategory: "__all__",
+    drawerTab: "history",
+    saveError: false
+  };
+
+  function t() { return STR[state.lang]; }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function faviconFor(url) {
+    try { var u = new URL(url); return "https://www.google.com/s2/favicons?domain=" + u.hostname + "&sz=64"; }
+    catch (e) { return null; }
+  }
+  function parseDriveId(url) {
+    var patterns = [/\/d\/([a-zA-Z0-9_-]{15,})/, /[?&]id=([a-zA-Z0-9_-]{15,})/];
+    for (var i = 0; i < patterns.length; i++) {
+      var m = url.match(patterns[i]);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
+  /* ---------- Firestore: shared site data (real-time) ---------- */
+  siteRef.onSnapshot(function (doc) {
+    if (doc.exists) {
+      var d = doc.data();
+      state.links = d.links || [];
+      state.categories = (d.categories && d.categories.length) ? d.categories : DEFAULT_CATEGORY_KEYS.slice();
+      state.adminHash = d.adminHash || null;
+      state.adminEmail = d.adminEmail || null;
+      state.background = d.background || null;
+      state.media = d.media || [];
+      state.siteName = d.siteName || "BANI KINGDOM ♔";
+    }
+    state.siteLoaded = true;
+    state.saveError = false;
+    render();
+  }, function () {
+    state.siteLoaded = true;
+    state.saveError = true;
+    render();
+  });
+
+  function patchSite(fields) {
+    siteRef.set(fields, { merge: true }).catch(function () {
+      state.saveError = true;
+      render();
+    });
+  }
+
+  /* ---------- Firestore: per-user activity (when signed in) ---------- */
+  function subscribeUser(uid) {
+    if (userUnsub) userUnsub();
+    userUnsub = db.collection("users").doc(uid).onSnapshot(function (doc) {
+      var d = doc.exists ? doc.data() : {};
+      state.history = d.history || [];
+      state.watchLater = d.watchLater || [];
+      render();
+      if (document.querySelector(".drawer")) renderDrawer();
+    });
+  }
+  function saveActivity() {
+    if (state.currentUser) {
+      db.collection("users").doc(state.currentUser.uid).set({
+        history: state.history, watchLater: state.watchLater,
+        displayName: state.currentUser.displayName || null,
+        email: state.currentUser.email || null,
+        photoURL: state.currentUser.photoURL || null
+      }, { merge: true });
+    } else {
+      saveLocalActivity();
+    }
+  }
+
+  auth.onAuthStateChanged(function (user) {
+    state.currentUser = user;
+    if (user) {
+      subscribeUser(user.uid);
+    } else {
+      if (userUnsub) { userUnsub(); userUnsub = null; }
+      var la = loadLocalActivity();
+      state.history = (la && la.history) || [];
+      state.watchLater = (la && la.watchLater) || [];
+    }
+    render();
+  });
+
+  function signInGoogle(onDone) {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(function (result) {
+      if (onDone) onDone(null, result.user);
+    }).catch(function (err) {
+      if (onDone) onDone(err, null);
+    });
+  }
+  function signOutGoogle() { auth.signOut(); state.isAdmin = false; render(); }
+
+  /* ---------- clock ---------- */
+  function clockHtml() {
+    var now = new Date();
+    var locale = state.lang === "bn" ? "bn-BD" : "en-US";
+    var time = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    var date = now.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+    return '<div class="clock mono"><span class="time">' + time + '</span><span class="date">' + esc(date) + '</span></div>';
+  }
+  setInterval(function () {
+    var el = document.getElementById("clock-slot");
+    if (el) el.innerHTML = clockHtml();
+  }, 1000);
+
+  /* ---------- background application ---------- */
+  function applyBackground() {
+    var bg = state.background;
+    if (bg && bg.type === "image" && bg.value) {
+      document.body.style.background = "";
+      document.body.style.backgroundImage = "linear-gradient(var(--overlay), var(--overlay)), url('" + bg.value.replace(/'/g, "%27") + "')";
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+      document.body.style.backgroundAttachment = "fixed";
+    } else if (bg && bg.type === "color" && bg.value) {
+      document.body.style.backgroundImage = "";
+      document.body.style.background = bg.value;
+    } else {
+      document.body.style.backgroundImage = "";
+      document.body.style.background = "";
+    }
+  }
+
+  /* ---------- rendering ---------- */
+  function render() {
+    document.documentElement.setAttribute("data-theme", state.theme);
+    document.documentElement.setAttribute("lang", state.lang === "bn" ? "bn" : "en");
+    applyBackground();
+    var T = t();
+
+    if (!state.siteLoaded) {
+      document.getElementById("app").innerHTML =
+        '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--muted)"><span class="mono">' + esc(T.loading) + '</span></div>';
+      return;
+    }
+
+    var adminControls = state.isAdmin
+      ? '<button class="icon-btn" data-action="open-bg" title="' + esc(T.bgSettings) + '">🎨</button>' +
+        '<button class="icon-btn" data-action="open-changepw" title="' + esc(T.changePassword) + '">🔑</button>' +
+        '<button class="icon-btn primary" data-action="admin-logout" title="' + esc(T.logout) + '">🚪</button>'
+      : '<button class="icon-btn" data-action="open-auth" title="' + esc(T.admin) + '">🔒</button>';
+
+    var userBtn = state.currentUser
+      ? (state.currentUser.photoURL
+          ? '<button class="avatar-btn" data-action="signout-user" title="' + esc(T.signOut) + '"><img src="' + state.currentUser.photoURL + '" alt=""></button>'
+          : '<button class="icon-btn" data-action="signout-user" title="' + esc(T.signOut) + '">👤</button>')
+      : '<button class="icon-btn" data-action="signin-user" title="' + esc(T.signInGoogle) + '">👤</button>';
+
+    var editNameBtn = state.isAdmin ? '<button class="edit-name-btn" data-action="open-name">✏️</button>' : "";
+
+    var header =
+      '<div class="header">' +
+        '<div class="brand">' +
+          '<h1>' + esc(state.siteName) + editNameBtn + '</h1>' +
+          '<div id="clock-slot">' + clockHtml() + '</div>' +
+        '</div>' +
+        '<div class="controls">' +
+          '<button class="icon-btn wide" data-action="toggle-lang">🌐 ' + (state.lang === "bn" ? "EN" : "বাং") + '</button>' +
+          '<button class="icon-btn" data-action="toggle-theme">' + (state.theme === "dark" ? "☀️" : "🌙") + '</button>' +
+          '<button class="icon-btn" data-action="open-menu" title="Menu">⋮</button>' +
+          userBtn +
+          adminControls +
+        '</div>' +
+      '</div>';
+
+    var errorBanner = state.saveError ? '<div class="save-error">' + esc(T.saveError) + '</div>' : "";
+
+    var searchBar =
+      '<div class="search-bar">' +
+        '<span class="sicon">🔍</span>' +
+        '<input id="search-input" type="text" placeholder="' + esc(T.searchPlaceholder) + '">' +
+        '<button data-action="run-search">' + esc(T.searchBtn) + '</button>' +
+      '</div>';
+
+    var tabsHtml = '<div class="tabs">';
+    tabsHtml += '<button class="tab' + (state.activeCategory === "__all__" ? " active" : "") + '" data-action="set-cat" data-cat="__all__">' + esc(T.all) + '</button>';
+    state.categories.forEach(function (c) {
+      tabsHtml += '<button class="tab' + (state.activeCategory === c ? " active" : "") + '" data-action="set-cat" data-cat="' + esc(c) + '">' + esc(catLabel(c, state.lang)) + '</button>';
+    });
+    if (state.isAdmin) {
+      tabsHtml += '<button class="add-channel" data-action="open-add-link">➕ ' + esc(T.addChannel) + '</button>';
+    }
+    tabsHtml += '</div>';
+
+    var filtered = state.activeCategory === "__all__" ? state.links : state.links.filter(function (l) { return l.category === state.activeCategory; });
+    var gridHtml;
+    if (filtered.length === 0) {
+      gridHtml = '<div class="empty"><p>' + esc(T.noLinks) + '</p>' + (!state.isAdmin ? '<p style="font-size:0.85rem">' + esc(T.loginToAdd) + '</p>' : '') + '</div>';
+    } else {
+      gridHtml = '<div class="grid">';
+      filtered.forEach(function (link, i) {
+        var fav = faviconFor(link.url);
+        var isSaved = state.watchLater.some(function (w) { return w.id === link.id; });
+        var adminActions = state.isAdmin
+          ? '<button data-action="edit-link" data-id="' + esc(link.id) + '">✏️</button><button data-action="delete-link" data-id="' + esc(link.id) + '">🗑️</button>'
+          : "";
+        var actions =
+          '<div class="card-top-right">' +
+            '<button class="bookmark-btn" data-action="toggle-watch" data-id="' + esc(link.id) + '">' + (isSaved ? "★" : "☆") + '</button>' +
+            adminActions +
+          '</div>';
+        gridHtml +=
+          '<a class="card" href="' + esc(link.url) + '" target="_blank" rel="noopener noreferrer" data-action="log-link" data-id="' + esc(link.id) + '">' +
+            '<div class="card-top"><span class="ch mono">' + esc(T.channelPrefix) + ' ' + String(i + 1).padStart(2, "0") + '</span>' + actions + '</div>' +
+            '<div class="card-title">' + (fav ? '<img src="' + fav + '" alt="" onerror="this.style.display=\'none\'">' : '') + '<span>' + esc(link.title) + '</span></div>' +
+            '<span class="card-cat mono">' + esc(catLabel(link.category, state.lang)) + '</span>' +
+          '</a>';
+      });
+      gridHtml += '</div>';
+    }
+
+    var mediaAddBtn = state.isAdmin ? '<button class="add-channel" style="margin-left:0" data-action="open-add-media">➕ ' + esc(T.addMedia) + '</button>' : "";
+    var mediaGrid;
+    if (state.media.length === 0) {
+      mediaGrid = '<div class="empty" style="padding:24px 16px;font-size:0.9rem">' + esc(T.noMedia) + '</div>';
+    } else {
+      mediaGrid = '<div class="media-grid">';
+      state.media.forEach(function (m) {
+        var driveId = m.driveId;
+        var viewUrl = driveId ? ("https://drive.google.com/uc?export=view&id=" + driveId) : m.url;
+        var downloadUrl = driveId ? ("https://drive.google.com/uc?export=download&id=" + driveId) : m.url;
+        var previewUrl = driveId ? ("https://drive.google.com/file/d/" + driveId + "/preview") : m.url;
+        var thumb = m.type === "video"
+          ? '<iframe src="' + previewUrl + '" allow="autoplay"></iframe>'
+          : '<img src="' + viewUrl + '" alt="' + esc(m.title) + '" onerror="this.style.opacity=0.2">';
+        var delBtn = state.isAdmin ? '<button data-action="delete-media" data-id="' + esc(m.id) + '">🗑️</button>' : "";
+        mediaGrid +=
+          '<div class="media-card">' +
+            '<div class="media-thumb">' + thumb + '</div>' +
+            '<div class="media-meta"><span class="mtitle">' + esc(m.title) + '</span>' +
+            '<span class="mactions"><a href="' + downloadUrl + '" target="_blank" rel="noopener noreferrer">⬇️</a>' + delBtn + '</span></div>' +
+          '</div>';
+      });
+      mediaGrid += '</div>';
+    }
+
+    var footer = '<div class="footer-tag mono">' + esc(state.isAdmin ? T.adminModeOn : T.openToAll) + '</div>';
+
+    document.getElementById("app").innerHTML =
+      '<div class="wrap">' +
+        header + errorBanner + searchBar + tabsHtml + gridHtml +
+        '<h2 class="section-title">🖼️ ' + esc(T.media) + '</h2>' +
+        '<div class="media-header">' + mediaAddBtn + '</div>' +
+        mediaGrid + footer +
+      '</div>';
+
+    var si = document.getElementById("search-input");
+    if (si) si.addEventListener("keydown", function (e) { if (e.key === "Enter") runSearch(); });
+  }
+
+  function runSearch() {
+    var q = (document.getElementById("search-input") || {}).value || "";
+    q = q.trim();
+    if (!q) return;
+    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
+  }
+
+  /* ---------- modal helpers ---------- */
+  function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+  function openModal(html) {
+    document.getElementById("modal-root").innerHTML =
+      '<div class="overlay" data-action="close-modal"><div class="modal" onclick="event.stopPropagation()">' + html + '</div></div>';
+  }
+
+  /* ---------- activity: history / watch later ---------- */
+  function logHistory(id) {
+    var link = state.links.find(function (l) { return l.id === id; });
+    if (!link) return;
+    state.history = state.history.filter(function (h) { return h.id !== id; });
+    state.history.unshift({ id: link.id, title: link.title, url: link.url, ts: Date.now() });
+    if (state.history.length > 50) state.history = state.history.slice(0, 50);
+    saveActivity();
+  }
+  function toggleWatch(id) {
+    var link = state.links.find(function (l) { return l.id === id; });
+    if (!link) return;
+    var exists = state.watchLater.some(function (w) { return w.id === id; });
+    if (exists) {
+      state.watchLater = state.watchLater.filter(function (w) { return w.id !== id; });
+    } else {
+      state.watchLater.unshift({ id: link.id, title: link.title, url: link.url });
+    }
+    saveActivity();
+    render();
+  }
+  function removeWatch(id) {
+    state.watchLater = state.watchLater.filter(function (w) { return w.id !== id; });
+    saveActivity();
+    renderDrawer();
+  }
+  function clearHistory() {
+    state.history = [];
+    saveActivity();
+    renderDrawer();
+  }
+
+  /* ---------- drawer (History / Watch Later / Downloads) ---------- */
+  function closeDrawer() { document.getElementById("drawer-root").innerHTML = ""; }
+  function openDrawer(tabName) {
+    state.drawerTab = tabName || "history";
+    renderDrawer();
+  }
+  function renderDrawer() {
+    var root = document.getElementById("drawer-root");
+    if (!root.querySelector(".drawer")) {
+      root.innerHTML = '<div class="drawer-overlay" data-action="close-drawer"></div><div class="drawer" onclick="event.stopPropagation()"></div>';
+    }
+    var T = t();
+    var tabs = ["history", "watchLater", "downloads"];
+    var tabLabels = { history: T.history, watchLater: T.watchLater, downloads: T.downloads };
+    var tabsHtml = '<div class="drawer-tabs">' + tabs.map(function (tab) {
+      return '<button class="' + (state.drawerTab === tab ? "active" : "") + '" data-action="drawer-tab" data-tab="' + tab + '">' + esc(tabLabels[tab]) + '</button>';
+    }).join("") + '</div>';
+
+    var body = "";
+    if (state.drawerTab === "history") {
+      if (state.history.length === 0) {
+        body = '<div class="drawer-empty">' + esc(T.noHistory) + '</div>';
+      } else {
+        body = '<button class="drawer-clear" data-action="clear-history">' + esc(T.clearHistory) + '</button>';
+        state.history.forEach(function (h) {
+          body += '<div class="drawer-item"><a href="' + esc(h.url) + '" target="_blank" rel="noopener noreferrer">' + esc(h.title) + '</a></div>';
+        });
+      }
+    } else if (state.drawerTab === "watchLater") {
+      if (state.watchLater.length === 0) {
+        body = '<div class="drawer-empty">' + esc(T.noWatchLater) + '</div>';
+      } else {
+        state.watchLater.forEach(function (w) {
+          body += '<div class="drawer-item"><a href="' + esc(w.url) + '" target="_blank" rel="noopener noreferrer">' + esc(w.title) + '</a><button data-action="remove-watch" data-id="' + esc(w.id) + '">✖️</button></div>';
+        });
+      }
+    } else {
+      if (state.media.length === 0) {
+        body = '<div class="drawer-empty">' + esc(T.noDownloads) + '</div>';
+      } else {
+        state.media.forEach(function (m) {
+          var driveId = m.driveId;
+          var downloadUrl = driveId ? ("https://drive.google.com/uc?export=download&id=" + driveId) : m.url;
+          body += '<div class="drawer-item"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(m.title) + '</span><a href="' + downloadUrl + '" target="_blank" rel="noopener noreferrer" style="flex:none">⬇️</a></div>';
+        });
+      }
+    }
+
+    if (!state.currentUser) {
+      body += '<div class="drawer-guest-note">' + esc(T.guestNote) + '</div>';
+    }
+
+    root.querySelector(".drawer").innerHTML =
+      '<h2>' + esc(T.history) + '<button data-action="close-drawer">✖️</button></h2>' +
+      tabsHtml + body;
+  }
+
+  /* ---------- link add/edit modal ---------- */
+  function openLinkModal(mode, link) {
+    var editingLink = link || { title: "", url: "", category: state.categories[0] || "" };
+    var T = t();
+    var catOptions = state.categories.map(function (c) {
+      return '<option value="' + esc(c) + '"' + (c === editingLink.category ? " selected" : "") + '>' + esc(catLabel(c, state.lang)) + '</option>';
+    }).join("");
+    openModal(
+      '<h2>' + esc(mode === "edit" ? T.editLink : T.addLink) + '<button data-action="close-modal">✖️</button></h2>' +
+      '<label>' + esc(T.name) + '</label><input id="lm-title" type="text" placeholder="' + esc(T.namePlaceholder) + '" value="' + esc(editingLink.title) + '">' +
+      '<label>' + esc(T.link) + '</label><input id="lm-url" type="text" placeholder="https://..." value="' + esc(editingLink.url) + '">' +
+      '<label>' + esc(T.category) + '</label><select id="lm-cat">' + catOptions + '</select>' +
+      '<input id="lm-newcat" type="text" placeholder="' + esc(T.orNewCategory) + '">' +
+      '<button class="submit" data-action="save-link" data-mode="' + mode + '" data-id="' + esc(editingLink.id || "") + '">✔️ ' + esc(T.save) + '</button>'
+    );
+  }
+  function submitLink(mode, id) {
+    var title = document.getElementById("lm-title").value.trim();
+    var url = document.getElementById("lm-url").value.trim();
+    var cat = document.getElementById("lm-cat").value;
+    var newCat = document.getElementById("lm-newcat").value.trim();
+    if (!title || !url) return;
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    var finalCat = newCat || cat;
+    var data = { id: id || Date.now().toString(), title: title, url: url, category: finalCat };
+    var newLinks;
+    if (mode === "edit") {
+      newLinks = state.links.map(function (l) { return l.id === data.id ? data : l; });
+    } else {
+      newLinks = state.links.concat([data]);
+    }
+    var newCategories = state.categories;
+    if (finalCat && state.categories.indexOf(finalCat) === -1) newCategories = state.categories.concat([finalCat]);
+    closeModal();
+    patchSite({ links: newLinks, categories: newCategories });
+  }
+  function deleteLink(id) {
+    var newLinks = state.links.filter(function (l) { return l.id !== id; });
+    patchSite({ links: newLinks });
+  }
+
+  /* ---------- auth modals ---------- */
+  function openAuthModal() {
+    var T = t();
+    var hasPw = !!state.adminHash;
+    openModal(
+      '<h2>' + esc(hasPw ? T.adminLogin : T.adminSetup) + '<button data-action="close-modal">✖️</button></h2>' +
+      (!hasPw ? '<p class="hint">' + esc(T.setupHint) + '</p>' : '') +
+      '<label>' + esc(T.password) + '</label><input id="auth-pw" type="password">' +
+      (!hasPw ? '<label>' + esc(T.confirmPassword) + '</label><input id="auth-pw2" type="password">' : '') +
+      '<div id="auth-err" class="err"></div>' +
+      '<button class="submit" data-action="submit-auth" data-haspw="' + hasPw + '">✔️ ' + esc(hasPw ? T.login : T.setupAndLogin) + '</button>' +
+      '<div class="divider">' + esc(T.orDivider) + '</div>' +
+      '<button class="google-btn" data-action="admin-google">🔵 ' + esc(T.continueWithGoogle) + '</button>'
+    );
+  }
+  function submitAuth(hasPw) {
+    var T = t();
+    var pw = document.getElementById("auth-pw").value;
+    var errEl = document.getElementById("auth-err");
+    if (!hasPw) {
+      var pw2 = document.getElementById("auth-pw2").value;
+      if (pw.length < 4) { errEl.textContent = T.pwTooShort; return; }
+      if (pw !== pw2) { errEl.textContent = T.pwMismatch; return; }
+      state.isAdmin = true;
+      closeModal();
+      patchSite({ adminHash: hashPassword(pw) });
+    } else {
+      if (hashPassword(pw) === state.adminHash) {
+        state.isAdmin = true;
+        closeModal();
+        render();
+      } else {
+        errEl.textContent = T.wrongPassword;
+      }
+    }
+  }
+  function adminViaGoogle() {
+    var T = t();
+    var errEl = document.getElementById("auth-err");
+    signInGoogle(function (err, user) {
+      if (err) { if (errEl) errEl.textContent = err.message; return; }
+      if (!state.adminEmail) {
+        state.isAdmin = true;
+        closeModal();
+        patchSite({ adminEmail: user.email });
+      } else if (state.adminEmail === user.email) {
+        state.isAdmin = true;
+        closeModal();
+        render();
+      } else {
+        closeModal();
+        render();
+        setTimeout(function () { alert(T.notAdminAccount); }, 100);
+      }
+    });
+  }
+  function openChangePwModal() {
+    var T = t();
+    openModal(
+      '<h2>' + esc(T.changePasswordTitle) + '<button data-action="close-modal">✖️</button></h2>' +
+      '<label>' + esc(T.currentPassword) + '</label><input id="cpw-old" type="password">' +
+      '<label>' + esc(T.newPassword) + '</label><input id="cpw-new" type="password">' +
+      '<label>' + esc(T.confirmNewPassword) + '</label><input id="cpw-confirm" type="password">' +
+      '<div id="cpw-err" class="err"></div>' +
+      '<button class="submit" data-action="submit-changepw">✔️ ' + esc(T.save) + '</button>'
+    );
+  }
+  function submitChangePw() {
+    var T = t();
+    var oldPw = document.getElementById("cpw-old").value;
+    var newPw = document.getElementById("cpw-new").value;
+    var confirm = document.getElementById("cpw-confirm").value;
+    var errEl = document.getElementById("cpw-err");
+    if (hashPassword(oldPw) !== state.adminHash) { errEl.textContent = T.wrongCurrentPw; return; }
+    if (newPw.length < 4) { errEl.textContent = T.pwTooShort; return; }
+    if (newPw !== confirm) { errEl.textContent = T.pwMismatch; return; }
+    closeModal();
+    patchSite({ adminHash: hashPassword(newPw) });
+  }
+
+  /* ---------- background modal ---------- */
+  function openBgModal() {
+    var T = t();
+    var bg = state.background;
+    var type = (bg && bg.type) || "color";
+    var color = (bg && bg.type === "color" && bg.value) || "#14121a";
+    var img = (bg && bg.type === "image" && bg.value) || "";
+    openModal(
+      '<h2>' + esc(T.bgSettings) + '<button data-action="close-modal">✖️</button></h2>' +
+      '<div class="seg">' +
+        '<button data-action="bg-type" data-type="color" class="' + (type === "color" ? "active" : "") + '">' + esc(T.bgColorOption) + '</button>' +
+        '<button data-action="bg-type" data-type="image" class="' + (type === "image" ? "active" : "") + '">' + esc(T.bgImageOption) + '</button>' +
+      '</div>' +
+      '<div id="bg-fields">' +
+        (type === "color"
+          ? '<label>' + esc(T.bgColorLabel) + '</label><input id="bg-color" type="color" value="' + color + '">'
+          : '<label>' + esc(T.bgImageLabel) + '</label><input id="bg-image" type="text" placeholder="https://..." value="' + esc(img) + '">') +
+      '</div>' +
+      '<button class="submit" data-action="save-bg" data-type="' + type + '">✔️ ' + esc(T.apply) + '</button>'
+    );
+  }
+  function switchBgType(type) {
+    var T = t();
+    var fields = document.getElementById("bg-fields");
+    var submitBtn = document.querySelector('[data-action="save-bg"]');
+    document.querySelectorAll('[data-action="bg-type"]').forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-type") === type);
+    });
+    submitBtn.setAttribute("data-type", type);
+    if (type === "color") {
+      fields.innerHTML = '<label>' + esc(T.bgColorLabel) + '</label><input id="bg-color" type="color" value="#14121a">';
+    } else {
+      fields.innerHTML = '<label>' + esc(T.bgImageLabel) + '</label><input id="bg-image" type="text" placeholder="https://...">';
+    }
+  }
+  function saveBg(type) {
+    var bg;
+    if (type === "color") {
+      bg = { type: "color", value: document.getElementById("bg-color").value };
+    } else {
+      var val = document.getElementById("bg-image").value.trim();
+      if (!val) return;
+      bg = { type: "image", value: val };
+    }
+    closeModal();
+    patchSite({ background: bg });
+  }
+
+  /* ---------- site name modal ---------- */
+  function openNameModal() {
+    var T = t();
+    openModal(
+      '<h2>' + esc(T.siteNameSettings) + '<button data-action="close-modal">✖️</button></h2>' +
+      '<label>' + esc(T.siteNameLabel) + '</label><input id="name-input" type="text" value="' + esc(state.siteName) + '">' +
+      '<button class="submit" data-action="save-name">✔️ ' + esc(T.apply) + '</button>'
+    );
+  }
+  function saveName() {
+    var val = document.getElementById("name-input").value.trim();
+    closeModal();
+    patchSite({ siteName: val || "BANI KINGDOM ♔" });
+  }
+
+  /* ---------- media modal ---------- */
+  function openMediaModal() {
+    var T = t();
+    openModal(
+      '<h2>' + esc(T.addMedia) + '<button data-action="close-modal">✖️</button></h2>' +
+      '<label>' + esc(T.mediaTitle) + '</label><input id="md-title" type="text">' +
+      '<label>' + esc(T.mediaUrl) + '</label><input id="md-url" type="text" placeholder="https://drive.google.com/...">' +
+      '<p class="hint">' + esc(T.driveHint) + '</p>' +
+      '<label>' + esc(T.mediaTypeLabel) + '</label>' +
+      '<div class="seg">' +
+        '<button data-action="md-type" data-type="image" class="active">🖼️ ' + esc(T.image) + '</button>' +
+        '<button data-action="md-type" data-type="video">🎬 ' + esc(T.video) + '</button>' +
+      '</div>' +
+      '<button class="submit" data-action="save-media" data-type="image">✔️ ' + esc(T.save) + '</button>'
+    );
+  }
+  function switchMediaType(type) {
+    document.querySelectorAll('[data-action="md-type"]').forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-type") === type);
+    });
+    document.querySelector('[data-action="save-media"]').setAttribute("data-type", type);
+  }
+  function saveMedia(type) {
+    var title = document.getElementById("md-title").value.trim();
+    var url = document.getElementById("md-url").value.trim();
+    if (!title || !url) return;
+    var driveId = parseDriveId(url);
+    var newMedia = state.media.concat([{ id: Date.now().toString(), title: title, url: url, type: type, driveId: driveId || null }]);
+    closeModal();
+    patchSite({ media: newMedia });
+  }
+  function deleteMedia(id) {
+    var newMedia = state.media.filter(function (m) { return m.id !== id; });
+    patchSite({ media: newMedia });
+  }
+
+  /* ---------- event delegation ---------- */
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+    switch (action) {
+      case "toggle-lang": state.lang = state.lang === "bn" ? "en" : "bn"; savePrefs(); render(); break;
+      case "toggle-theme": state.theme = state.theme === "dark" ? "light" : "dark"; savePrefs(); render(); break;
+      case "open-auth": openAuthModal(); break;
+      case "submit-auth": submitAuth(el.getAttribute("data-haspw") === "true"); break;
+      case "admin-google": adminViaGoogle(); break;
+      case "admin-logout": state.isAdmin = false; render(); break;
+      case "signin-user": signInGoogle(function (err) { if (err) alert(err.message); }); break;
+      case "signout-user": signOutGoogle(); break;
+      case "open-changepw": openChangePwModal(); break;
+      case "submit-changepw": submitChangePw(); break;
+      case "open-bg": openBgModal(); break;
+      case "bg-type": switchBgType(el.getAttribute("data-type")); break;
+      case "save-bg": saveBg(el.getAttribute("data-type")); break;
+      case "open-name": openNameModal(); break;
+      case "save-name": saveName(); break;
+      case "open-add-link": openLinkModal("add", null); break;
+      case "edit-link":
+        e.preventDefault(); e.stopPropagation();
+        var lid = el.getAttribute("data-id");
+        var found = state.links.find(function (l) { return l.id === lid; });
+        openLinkModal("edit", found); break;
+      case "delete-link":
+        e.preventDefault(); e.stopPropagation();
+        deleteLink(el.getAttribute("data-id")); break;
+      case "save-link": submitLink(el.getAttribute("data-mode"), el.getAttribute("data-id")); break;
+      case "open-add-media": openMediaModal(); break;
+      case "md-type": switchMediaType(el.getAttribute("data-type")); break;
+      case "save-media": saveMedia(el.getAttribute("data-type")); break;
+      case "delete-media": deleteMedia(el.getAttribute("data-id")); break;
+      case "set-cat": state.activeCategory = el.getAttribute("data-cat"); render(); break;
+      case "run-search": runSearch(); break;
+      case "close-modal": closeModal(); break;
+      case "open-menu": openDrawer("history"); break;
+      case "close-drawer": closeDrawer(); break;
+      case "drawer-tab": state.drawerTab = el.getAttribute("data-tab"); renderDrawer(); break;
+      case "toggle-watch": e.preventDefault(); e.stopPropagation(); toggleWatch(el.getAttribute("data-id")); break;
+      case "remove-watch": removeWatch(el.getAttribute("data-id")); break;
+      case "clear-history": clearHistory(); break;
+      case "log-link": logHistory(el.getAttribute("data-id")); break;
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
