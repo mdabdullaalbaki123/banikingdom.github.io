@@ -354,13 +354,21 @@
   }
 
   function signInGoogle() {
-    var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider);
+    try {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider).catch(function (err) { alert("Sign-in error: " + err.code + " — " + err.message); });
+    } catch (e) {
+      alert("Sign-in error: " + e.message);
+    }
   }
   function adminSignIn() {
-    sessionStorage.setItem(PENDING_CLAIM_KEY, "1");
-    var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider);
+    try { sessionStorage.setItem(PENDING_CLAIM_KEY, "1"); } catch (e) {}
+    try {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider).catch(function (err) { alert("Sign-in error: " + err.code + " — " + err.message); });
+    } catch (e) {
+      alert("Sign-in error: " + e.message);
+    }
   }
   function signOutGoogle() { auth.signOut(); state.isAdmin = false; render(); }
 
@@ -784,6 +792,7 @@
     var el = e.target.closest("[data-action]");
     if (!el) return;
     var action = el.getAttribute("data-action");
+    try {
     switch (action) {
       case "toggle-lang": state.lang = state.lang === "bn" ? "en" : "bn"; savePrefs(); render(); break;
       case "toggle-theme": state.theme = state.theme === "dark" ? "light" : "dark"; savePrefs(); render(); break;
@@ -821,6 +830,9 @@
       case "remove-watch": removeWatch(el.getAttribute("data-id")); break;
       case "clear-history": clearHistory(); break;
       case "log-link": logHistory(el.getAttribute("data-id")); break;
+    }
+    } catch (err) {
+      alert("Error (" + action + "): " + err.message);
     }
   });
 
