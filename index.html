@@ -540,7 +540,7 @@
   function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
   function openModal(html) {
     document.getElementById("modal-root").innerHTML =
-      '<div class="overlay" data-action="close-modal"><div class="modal" onclick="event.stopPropagation()">' + html + '</div></div>';
+      '<div class="overlay" data-action="close-modal"><div class="modal">' + html + '</div></div>';
   }
 
   /* ---------- activity: history / watch later ---------- */
@@ -584,7 +584,7 @@
   function renderDrawer() {
     var root = document.getElementById("drawer-root");
     if (!root.querySelector(".drawer")) {
-      root.innerHTML = '<div class="drawer-overlay" data-action="close-drawer"></div><div class="drawer" onclick="event.stopPropagation()"></div>';
+      root.innerHTML = '<div class="drawer-overlay" data-action="close-drawer"></div><div class="drawer"></div>';
     }
     var T = t();
     var tabs = ["history", "watchLater", "downloads"];
@@ -822,9 +822,9 @@
       case "delete-media": deleteMedia(el.getAttribute("data-id")); break;
       case "set-cat": state.activeCategory = el.getAttribute("data-cat"); render(); break;
       case "run-search": runSearch(); break;
-      case "close-modal": closeModal(); break;
+      case "close-modal": if (e.target === el) closeModal(); break;
       case "open-menu": openDrawer("history"); break;
-      case "close-drawer": closeDrawer(); break;
+      case "close-drawer": if (e.target === el) closeDrawer(); break;
       case "drawer-tab": state.drawerTab = el.getAttribute("data-tab"); renderDrawer(); break;
       case "toggle-watch": e.preventDefault(); e.stopPropagation(); toggleWatch(el.getAttribute("data-id")); break;
       case "remove-watch": removeWatch(el.getAttribute("data-id")); break;
