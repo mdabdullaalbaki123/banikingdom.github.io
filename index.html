@@ -140,65 +140,6 @@
   var siteRef = db.collection("site").doc("main");
   var userUnsub = null;
 
-  /* ---------- pure-JS SHA-256 (used only for the password path; no crypto.subtle dependency) ---------- */
-  function sha256(ascii) {
-    function rightRotate(v, n) { return (v >>> n) | (v << (32 - n)); }
-    var maxWord = Math.pow(2, 32);
-    var words = [], asciiBitLength = ascii.length * 8;
-    var hash = sha256.h = sha256.h || [];
-    var k = sha256.k = sha256.k || [];
-    var primeCounter = k.length;
-    var isComposite = {};
-    for (var candidate = 2; primeCounter < 64; candidate++) {
-      if (!isComposite[candidate]) {
-        for (var i = 0; i < 313; i += candidate) isComposite[i] = candidate;
-        hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
-        k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
-      }
-    }
-    ascii += "\x80";
-    while ((ascii.length % 64) - 56) ascii += "\x00";
-    for (var j = 0; j < ascii.length; j++) {
-      var b = ascii.charCodeAt(j);
-      if (b > 255) { throw new Error("input must be ascii-safe"); }
-      words[j >> 2] |= b << (((3 - j) % 4) * 8);
-    }
-    words[words.length] = ((asciiBitLength / maxWord) | 0);
-    words[words.length] = (asciiBitLength);
-    for (var chunkIndex = 0; chunkIndex < words.length; chunkIndex += 16) {
-      var w = words.slice(chunkIndex, chunkIndex + 16);
-      var oldHash = hash.slice(0);
-      hash = hash.slice(0);
-      for (var i2 = 0; i2 < 64; i2++) {
-        if (i2 >= 16) {
-          var w15 = w[i2 - 15], w2 = w[i2 - 2];
-          var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
-          var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
-          w[i2] = (w[i2 - 16] + s0 + w[i2 - 7] + s1) | 0;
-        }
-        var S1 = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
-        var ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
-        var temp1 = (hash[7] + S1 + ch + k[i2] + w[i2]) | 0;
-        var S0 = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
-        var maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
-        var temp2 = (S0 + maj) | 0;
-        hash = [(temp1 + temp2) | 0].concat(hash.slice(0, 7));
-        hash[4] = (hash[4] + temp1) | 0;
-      }
-      for (var l = 0; l < 8; l++) hash[l] = (hash[l] + oldHash[l]) | 0;
-    }
-    var result = "";
-    for (var m = 0; m < 8; m++) {
-      for (var n = 3; n >= 0; n--) {
-        var byte = (hash[m] >> (n * 8)) & 255;
-        result += ("00" + byte.toString(16)).slice(-2);
-      }
-    }
-    sha256.h = null; sha256.k = null;
-    return result;
-  }
-  function hashPassword(pw) { return sha256(unescape(encodeURIComponent(pw))); }
-
   /* ---------- i18n ---------- */
   var DEFAULT_CATEGORY_KEYS = ["movie", "tv", "music", "other"];
   var CATEGORY_LABELS = {
@@ -284,7 +225,7 @@
   var savedPrefs = loadPrefs();
   var savedLocalActivity = loadLocalActivity();
   var state = {
-    links: [], categories: DEFAULT_CATEGORY_KEYS.slice(), adminHash: null, adminEmail: null,
+    links: [], categories: DEFAULT_CATEGORY_KEYS.slice(), adminEmail: null,
     background: null, media: [], siteName: "BANI KINGDOM ♔", siteLoaded: false,
     lang: (savedPrefs && savedPrefs.lang) || "bn",
     theme: (savedPrefs && savedPrefs.theme) || "dark",
@@ -322,7 +263,6 @@
       var d = doc.data();
       state.links = d.links || [];
       state.categories = (d.categories && d.categories.length) ? d.categories : DEFAULT_CATEGORY_KEYS.slice();
-      state.adminHash = d.adminHash || null;
       state.adminEmail = d.adminEmail || null;
       state.background = d.background || null;
       state.media = d.media || [];
@@ -330,12 +270,14 @@
     }
     state.siteLoaded = true;
     state.saveError = false;
+    maybeClaimAdmin();
     render();
   }, function () {
     state.siteLoaded = true;
     state.saveError = true;
     render();
   });
+
 
   function patchSite(fields) {
     siteRef.set(fields, { merge: true }).catch(function () {
@@ -378,16 +320,47 @@
       state.history = (la && la.history) || [];
       state.watchLater = (la && la.watchLater) || [];
     }
+    maybeClaimAdmin();
     render();
   });
 
-  function signInGoogle(onDone) {
+  var PENDING_CLAIM_KEY = "bk-pending-admin-claim";
+  var pendingClaim = sessionStorage.getItem(PENDING_CLAIM_KEY) === "1";
+
+  auth.getRedirectResult().catch(function (err) {
+    if (err && err.code !== "auth/no-auth-event" && err.code !== "auth/popup-closed-by-user") {
+      setTimeout(function () { alert(err.message); }, 100);
+    }
+  });
+
+  function maybeClaimAdmin() {
+    if (!state.currentUser || !state.siteLoaded) return;
+    var email = state.currentUser.email;
+    if (pendingClaim) {
+      pendingClaim = false;
+      sessionStorage.removeItem(PENDING_CLAIM_KEY);
+      if (!state.adminEmail) {
+        state.isAdmin = true;
+        patchSite({ adminEmail: email });
+        return;
+      } else if (state.adminEmail === email) {
+        state.isAdmin = true;
+      } else {
+        setTimeout(function () { alert(t().notAdminAccount); }, 100);
+      }
+    } else if (state.adminEmail && state.adminEmail === email) {
+      state.isAdmin = true;
+    }
+  }
+
+  function signInGoogle() {
     var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(function (result) {
-      if (onDone) onDone(null, result.user);
-    }).catch(function (err) {
-      if (onDone) onDone(err, null);
-    });
+    auth.signInWithRedirect(provider);
+  }
+  function adminSignIn() {
+    sessionStorage.setItem(PENDING_CLAIM_KEY, "1");
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithRedirect(provider);
   }
   function signOutGoogle() { auth.signOut(); state.isAdmin = false; render(); }
 
@@ -437,7 +410,6 @@
 
     var adminControls = state.isAdmin
       ? '<button class="icon-btn" data-action="open-bg" title="' + esc(T.bgSettings) + '">🎨</button>' +
-        '<button class="icon-btn" data-action="open-changepw" title="' + esc(T.changePassword) + '">🔑</button>' +
         '<button class="icon-btn primary" data-action="admin-logout" title="' + esc(T.logout) + '">🚪</button>'
       : '<button class="icon-btn" data-action="open-auth" title="' + esc(T.admin) + '">🔒</button>';
 
@@ -696,81 +668,16 @@
   /* ---------- auth modals ---------- */
   function openAuthModal() {
     var T = t();
-    var hasPw = !!state.adminHash;
+    var isFirstTime = !state.adminEmail;
     openModal(
-      '<h2>' + esc(hasPw ? T.adminLogin : T.adminSetup) + '<button data-action="close-modal">✖️</button></h2>' +
-      (!hasPw ? '<p class="hint">' + esc(T.setupHint) + '</p>' : '') +
-      '<label>' + esc(T.password) + '</label><input id="auth-pw" type="password">' +
-      (!hasPw ? '<label>' + esc(T.confirmPassword) + '</label><input id="auth-pw2" type="password">' : '') +
-      '<div id="auth-err" class="err"></div>' +
-      '<button class="submit" data-action="submit-auth" data-haspw="' + hasPw + '">✔️ ' + esc(hasPw ? T.login : T.setupAndLogin) + '</button>' +
-      '<div class="divider">' + esc(T.orDivider) + '</div>' +
+      '<h2>' + esc(isFirstTime ? T.adminSetup : T.adminLogin) + '<button data-action="close-modal">✖️</button></h2>' +
+      (isFirstTime ? '<p class="hint">' + esc(T.setupHint) + '</p>' : '') +
       '<button class="google-btn" data-action="admin-google">🔵 ' + esc(T.continueWithGoogle) + '</button>'
     );
   }
-  function submitAuth(hasPw) {
-    var T = t();
-    var pw = document.getElementById("auth-pw").value;
-    var errEl = document.getElementById("auth-err");
-    if (!hasPw) {
-      var pw2 = document.getElementById("auth-pw2").value;
-      if (pw.length < 4) { errEl.textContent = T.pwTooShort; return; }
-      if (pw !== pw2) { errEl.textContent = T.pwMismatch; return; }
-      state.isAdmin = true;
-      closeModal();
-      patchSite({ adminHash: hashPassword(pw) });
-    } else {
-      if (hashPassword(pw) === state.adminHash) {
-        state.isAdmin = true;
-        closeModal();
-        render();
-      } else {
-        errEl.textContent = T.wrongPassword;
-      }
-    }
-  }
   function adminViaGoogle() {
-    var T = t();
-    var errEl = document.getElementById("auth-err");
-    signInGoogle(function (err, user) {
-      if (err) { if (errEl) errEl.textContent = err.message; return; }
-      if (!state.adminEmail) {
-        state.isAdmin = true;
-        closeModal();
-        patchSite({ adminEmail: user.email });
-      } else if (state.adminEmail === user.email) {
-        state.isAdmin = true;
-        closeModal();
-        render();
-      } else {
-        closeModal();
-        render();
-        setTimeout(function () { alert(T.notAdminAccount); }, 100);
-      }
-    });
-  }
-  function openChangePwModal() {
-    var T = t();
-    openModal(
-      '<h2>' + esc(T.changePasswordTitle) + '<button data-action="close-modal">✖️</button></h2>' +
-      '<label>' + esc(T.currentPassword) + '</label><input id="cpw-old" type="password">' +
-      '<label>' + esc(T.newPassword) + '</label><input id="cpw-new" type="password">' +
-      '<label>' + esc(T.confirmNewPassword) + '</label><input id="cpw-confirm" type="password">' +
-      '<div id="cpw-err" class="err"></div>' +
-      '<button class="submit" data-action="submit-changepw">✔️ ' + esc(T.save) + '</button>'
-    );
-  }
-  function submitChangePw() {
-    var T = t();
-    var oldPw = document.getElementById("cpw-old").value;
-    var newPw = document.getElementById("cpw-new").value;
-    var confirm = document.getElementById("cpw-confirm").value;
-    var errEl = document.getElementById("cpw-err");
-    if (hashPassword(oldPw) !== state.adminHash) { errEl.textContent = T.wrongCurrentPw; return; }
-    if (newPw.length < 4) { errEl.textContent = T.pwTooShort; return; }
-    if (newPw !== confirm) { errEl.textContent = T.pwMismatch; return; }
     closeModal();
-    patchSite({ adminHash: hashPassword(newPw) });
+    adminSignIn();
   }
 
   /* ---------- background modal ---------- */
@@ -881,13 +788,10 @@
       case "toggle-lang": state.lang = state.lang === "bn" ? "en" : "bn"; savePrefs(); render(); break;
       case "toggle-theme": state.theme = state.theme === "dark" ? "light" : "dark"; savePrefs(); render(); break;
       case "open-auth": openAuthModal(); break;
-      case "submit-auth": submitAuth(el.getAttribute("data-haspw") === "true"); break;
       case "admin-google": adminViaGoogle(); break;
       case "admin-logout": state.isAdmin = false; render(); break;
-      case "signin-user": signInGoogle(function (err) { if (err) alert(err.message); }); break;
+      case "signin-user": signInGoogle(); break;
       case "signout-user": signOutGoogle(); break;
-      case "open-changepw": openChangePwModal(); break;
-      case "submit-changepw": submitChangePw(); break;
       case "open-bg": openBgModal(); break;
       case "bg-type": switchBgType(el.getAttribute("data-type")); break;
       case "save-bg": saveBg(el.getAttribute("data-type")); break;
