@@ -105,6 +105,7 @@
 </style>
 </head>
 <body>
+<div id="debug-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99;background:#c0392b;color:#fff;padding:10px 14px;font-size:0.8rem;font-family:monospace;word-break:break-word;"></div>
 <div id="app"></div>
 <div id="modal-root"></div>
 <div id="drawer-root"></div>
@@ -135,6 +136,15 @@
     return;
   }
   var fbApp = firebase.initializeApp(firebaseConfig);
+  function showDebug(msg) {
+    var el = document.getElementById("debug-banner");
+    if (!el) return;
+    el.textContent = msg + " (✕ to dismiss: tap this bar)";
+    el.style.display = "block";
+    el.onclick = function () { el.style.display = "none"; };
+  }
+  window.addEventListener("error", function (e) { showDebug("JS error: " + e.message); });
+  window.addEventListener("unhandledrejection", function (e) { showDebug("Promise error: " + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
   var auth = firebase.auth();
   var db = firebase.firestore();
   var siteRef = db.collection("site").doc("main");
@@ -329,7 +339,7 @@
 
   auth.getRedirectResult().catch(function (err) {
     if (err && err.code !== "auth/no-auth-event" && err.code !== "auth/popup-closed-by-user") {
-      setTimeout(function () { alert(err.message); }, 100);
+      setTimeout(function () { showDebug(err.message); }, 100);
     }
   });
 
@@ -346,7 +356,7 @@
       } else if (state.adminEmail === email) {
         state.isAdmin = true;
       } else {
-        setTimeout(function () { alert(t().notAdminAccount); }, 100);
+        setTimeout(function () { showDebug(t().notAdminAccount); }, 100);
       }
     } else if (state.adminEmail && state.adminEmail === email) {
       state.isAdmin = true;
@@ -356,18 +366,18 @@
   function signInGoogle() {
     try {
       var provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithRedirect(provider).catch(function (err) { alert("Sign-in error: " + err.code + " — " + err.message); });
+      auth.signInWithRedirect(provider).catch(function (err) { showDebug("Sign-in error: " + err.code + " — " + err.message); });
     } catch (e) {
-      alert("Sign-in error: " + e.message);
+      showDebug("Sign-in error: " + e.message);
     }
   }
   function adminSignIn() {
     try { sessionStorage.setItem(PENDING_CLAIM_KEY, "1"); } catch (e) {}
     try {
       var provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithRedirect(provider).catch(function (err) { alert("Sign-in error: " + err.code + " — " + err.message); });
+      auth.signInWithRedirect(provider).catch(function (err) { showDebug("Sign-in error: " + err.code + " — " + err.message); });
     } catch (e) {
-      alert("Sign-in error: " + e.message);
+      showDebug("Sign-in error: " + e.message);
     }
   }
   function signOutGoogle() { auth.signOut(); state.isAdmin = false; render(); }
@@ -832,7 +842,7 @@
       case "log-link": logHistory(el.getAttribute("data-id")); break;
     }
     } catch (err) {
-      alert("Error (" + action + "): " + err.message);
+      showDebug("Error (" + action + "): " + err.message);
     }
   });
 
