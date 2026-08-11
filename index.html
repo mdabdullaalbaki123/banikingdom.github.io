@@ -526,13 +526,18 @@
     }
 
     var footer = '<div class="footer-tag mono">' + esc(state.isAdmin ? T.adminModeOn : T.openToAll) + '</div>';
+    var debugLine = '<div class="footer-tag mono" style="margin-top:6px;opacity:0.6">' +
+      'auth: ' + (state.currentUser ? esc(state.currentUser.email) : "not signed in") +
+      ' | adminEmail: ' + (state.adminEmail ? esc(state.adminEmail) : "unset") +
+      ' | isAdmin: ' + state.isAdmin +
+      '</div>';
 
     document.getElementById("app").innerHTML =
       '<div class="wrap">' +
         header + errorBanner + searchBar + tabsHtml + gridHtml +
         '<h2 class="section-title">🖼️ ' + esc(T.media) + '</h2>' +
         '<div class="media-header">' + mediaAddBtn + '</div>' +
-        mediaGrid + footer +
+        mediaGrid + footer + debugLine +
       '</div>';
 
     var si = document.getElementById("search-input");
